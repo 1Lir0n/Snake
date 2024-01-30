@@ -1,7 +1,7 @@
 # Snake
 Snake game using python
  
-a gui menu with start option and exit.
+a main menu gui with start option and exit buttons.
 ---
 <pre>
 start => starts the snake game
