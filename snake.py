@@ -4,9 +4,9 @@ from tkinter import *
 import random
 import os
 from json import *
-#import keyboard
 
 class SnakeGame:
+    #parameters
     size = 10
     score = 0
     strScore=""
@@ -17,6 +17,7 @@ class SnakeGame:
     colorNum=1
     textColor="white"
     bgColor="black"
+
     #movement keys
     up="Up"
     down="Down"
@@ -24,50 +25,74 @@ class SnakeGame:
     right="Right"
     retry="space"
     exitK="Escape"
+
     #create a cache folder for high score
     if(not(os.path.exists("snakeCache"))):
         os.makedirs("snakeCache") 
         hs=open('./snakeCache/high_score.txt','w')
         hs.close()
     
+    #initialize game
     def __init__(self, gameSize,cellSize,color,mode,keys):
         
+        #create the window
         self.window = Tk()
         self.window.title("Snake Game")
+
+        #canvas creation
         self.mode=mode
         self.changeMode()
         self.setSize(cellSize) 
         self.setCanvas(gameSize)
         self.canvas.pack()
+        
+        #score text
         self.strScore="Score: "+str(self.score)
         self.textScore=self.canvas.create_text(5,5,text=self.strScore,fill=self.textColor, font=("Helvetica", 11),anchor="nw")
+    
+    #snake creation
+        #snake color
         self.color=color
-        self.setKeys(keys)
+        #snake location
         self.base=self.startPoint()
-        self.setDirection(self.base)
+
+        #head snake creation
         self.snake = [(self.base, self.base)]
         self.setColor(self.color)
+        
+        #keys config
+        self.setKeys(keys)
 
+        #snake direction
+        self.setDirection(self.base)
+
+        #checks
         self.finish=IntVar(self.window)
         self.die=False
 
-        self.food = self.spawn_food()
+        #food creation
+        self.food = self.spawnFood()
 
         #set highscore
         self.hs=open('./snakeCache/high_score.txt','r')
         self.highScore=self.hs.readline()
         self.hs.close()
 
-        self.window.bind("<Key>", self.handle_key)
+        #player input
+        self.window.bind("<Key>", self.handleKey)
+        
+        #loop
         self.update()
         self.window.update_idletasks()
 
+        #active game window
         hwnd = ctypes.windll.user32.FindWindowW(None, "Snake Game")
         if hwnd:
-            self.activate_window(hwnd)
+            self.activateWindow(hwnd)
         else:
             print("Window not found.")
     
+    #set keys from saved config
     def setKeys(self,keys):
             self.up=keys[0]
             self.down=keys[1]
@@ -76,6 +101,7 @@ class SnakeGame:
             self.retry=keys[4]
             self.exitk=keys[5]
 
+    #set dark/light mode from saved config
     def changeMode(self):
         if(self.mode=="light"):
             self.setTxtColor("black")
@@ -84,6 +110,7 @@ class SnakeGame:
             self.setTxtColor("white")
             self.setBG("black")
 
+    #rainbow colors
     def changeColor(self):
         self.colorNum+=1
         if(self.colorNum>=7):
@@ -101,19 +128,21 @@ class SnakeGame:
         elif(self.colorNum==6):
             self.setColor("yellow")        
 
-    def activate_window(self,hwnd):
-        # Activate the window using SetForegroundWindow
+    # Activate the window using SetForegroundWindow
+    def activateWindow(self,hwnd):
         ctypes.windll.user32.SetForegroundWindow(hwnd)
     
-    def handle_key(self, event):
+    #player input decryption
+    def handleKey(self, event):
         if event.keysym == "space":
-            self.reset_game()
+            self.resetGame()
         elif event.keysym == "Escape":
             self.close()
         elif event.keysym in [self.up, self.down, self.left, self.right]:
             self.direction = event.keysym
 
-    def reset_game(self):
+    #game reset
+    def resetGame(self):
 
         if self.die==False:
             return
@@ -122,33 +151,35 @@ class SnakeGame:
         self.exitB.destroy()
         self.menuB.destroy()
         self.canvas.delete("all")
-        colorNum=1
+        self.colorNum=1
         self.score=0
         self.textScore=self.canvas.create_text(5,5,text=self.strScore,fill=self.textColor, font=("Helvetica", 11),anchor="nw",tags="text")
         self.base=self.startPoint()
         self.snake = [(self.base, self.base)]
         self.setColor(self.color)
         self.setDirection(self.base)
-        self.food = self.spawn_food()
+        self.food = self.spawnFood()
         self.update()
 
+    #closes the whole game 
     def close(self):
         exit()
-        #self.window.destroy()
 
-    def spawn_food(self):
+    #spawn food at random 
+    def spawnFood(self):
         x = random.randint(1, (self.width - self.size) // self.size) * self.size
         y = random.randint(11, (self.height - self.size) // self.size) * self.size
         food = self.canvas.create_rectangle(x, y, x + self.size, y + self.size, fill="red")
         return food
 
-    def move_snake(self):
+    #moves the snake one square
+    def moveSnake(self):
         head = self.snake[0]
         move = {self.up: (0, -self.size), self.down: (0, self.size), self.left: (-self.size, 0), self.right: (self.size, 0)}
         new_head = (head[0] + move[self.direction][0], head[1] + move[self.direction][1])
 
         self.snake.insert(0, new_head)
-
+        #checks for food collision
         if new_head == tuple(self.canvas.coords(self.food)[:2]):
             self.score+=10
             strScore="Score: "+str(self.score)
@@ -156,12 +187,13 @@ class SnakeGame:
             self.canvas.delete(self.food)
             if(self.rndColor):
                 self.changeColor()
-            self.food = self.spawn_food()
+            self.food = self.spawnFood()
         else:
             self.canvas.delete(self.snake[-1])
             self.snake.pop()
 
-    def check_collision(self):
+    #check if self collided
+    def checkCollision(self):
         head = self.snake[0]
         return (
             head[0] < 0
@@ -171,35 +203,39 @@ class SnakeGame:
             or head in self.snake[1:]
         )
 
+    #update every frame
     def update(self):
-
+        #if small grow big insta to start with 3 squares
         if(len(self.snake)<2):
             for i in range(2):
                 head = self.snake[0]
                 move = {self.up: (0, -self.size), self.down: (0, self.size), self.left: (-self.size, 0), self.right: (self.size, 0)}
                 new_head = (head[0] + move[self.direction][0], head[1] + move[self.direction][1])
                 self.snake.insert(0, new_head)
+        #checks if the game run first time or reseted
         if(not self.start):
             self.countDown()
-        
             self.window.wait_variable(self.finish)
-        if not self.check_collision():
-            self.move_snake()
+        #if snake good pos move snake
+        if not self.checkCollision():
+            self.moveSnake()
             self.canvas.delete("snake")
 
-            # Alternate between two colors
+            # Alternate between two color variant for the snake
             for i, (x, y) in enumerate(self.snake):
                 color = self.snake_colors[i % 2]
                 self.canvas.create_rectangle(x, y, x + self.size, y + self.size, fill=color, tags="snake")
-
+            #loops
             self.window.after(100, self.update)
         else:
+           #died
            self.deathScreen()
 
+    #end game screen
     def deathScreen(self):
         self.die = True
         self.setHighScore()
-        self.retryB = Button(self.window,text="Retry",command=self.reset_game,font=(16))
+        self.retryB = Button(self.window,text="Retry",command=self.resetGame,font=(16))
         self.retryB.place(relx=0.35,rely=0.6,anchor=CENTER,width=55)
         self.exitB = Button(self.window,text="Exit",command=self.close,font=(16))
         self.exitB.place(relx=0.65,rely=0.6,anchor=CENTER,width=55)
@@ -212,11 +248,13 @@ class SnakeGame:
             self.width // 2, self.height // 2, text="Game Over", fill=self.textColor, font=("Helvetica", 16),tags="text"
         )
     
+    #creates the main menu and delete the game
     def menu(self):
         self.window.destroy()
         menu = MainMenu()
         menu.start()
 
+    #give a diff color
     def rainbowColor(self,input):
         if(input==1):
             return "green"
@@ -230,7 +268,8 @@ class SnakeGame:
             return "orange"
         elif(input==6):
             return "yellow"
-        
+    
+    #set the snake color
     def setColor(self,color):
         if((color)=="blue"):
             self.snake_colors = ["#3d9af2", "#0c6bc4"]
@@ -248,6 +287,7 @@ class SnakeGame:
             self.rndColor = True
             self.setColor("green")
 
+    #set the snake size
     def setSize(self,cellSize):
         if(str(cellSize).lower()=="small"):
             self.size = 5
@@ -258,7 +298,8 @@ class SnakeGame:
         else:
             print("invalid value")
             exit()
-        
+    
+    #set the game window size
     def setCanvas(self,gameSize):
         if(str(gameSize).lower()=="small"):
             self.width = 300
@@ -275,6 +316,7 @@ class SnakeGame:
         self.canvas = Canvas(self.window, width=self.width, height=self.height, bg=self.bgColor)
         self.canvas.pack()
     
+    #choose a random location for snake
     def startPoint(self):
         lower_limit = self.size
         upper_limit = self.width-self.size
@@ -284,6 +326,7 @@ class SnakeGame:
 
         return random_number
 
+    #choose a random start direction for snake based on location
     def setDirection(self,base):
         # Define a list of possible directions
         directions = [self.up, self.down, self.right, self.left]
@@ -298,9 +341,11 @@ class SnakeGame:
 
         self.direction = str(random.choice(directions))
         
+    #run the game
     def run(self):
         self.window.mainloop()
 
+    #set the highscore to either the last or new one
     def setHighScore(self):
         with open('./snakeCache/high_score.txt', 'r') as hs_file:
             saved_high_score = hs_file.readline()
@@ -315,6 +360,7 @@ class SnakeGame:
                 hs_file.write(str(self.score))
             self.highScore = self.score
 
+    #simple count down
     def countDown(self, count=3):
         self.start=True
         if count > 0:
@@ -328,9 +374,11 @@ class SnakeGame:
             self.window.after(500, lambda: self.canvas.delete("timer"))
             self.finish.set(1)
 
+    #sets the windows background
     def setBG(self,input):
         self.bgColor=input
     
+    #sets the text color
     def setTxtColor(self,input):
         self.textColor=input
 
@@ -348,6 +396,7 @@ class MainMenu:
     right="Right"
     retry="space"
     exitK="Escape"    
+
     def __init__(self):
         #create window
         self.window = Tk()
@@ -366,18 +415,19 @@ class MainMenu:
 
         self.createMainMenu()
         self.g=IntVar(self.window)
-        self.window.bind("<Key>", self.handle_key)
+        self.window.bind("<Key>", self.handleKey)
         self.window.update_idletasks()
 
         hwnd = ctypes.windll.user32.FindWindowW(None, "Snake Game")
         if hwnd:
-            self.activate_window(hwnd)
+            self.activateWindow(hwnd)
         else:
             print("Window not found.")
 
+    #load settings from config
     def loadSettings(self):
         # Define the path to the settings file
-        settings_file_path = './snakeCache/settings.json'
+        settings_file_path = './snakeCache/config.json'
 
         try:
             # Load the settings from the file
@@ -408,7 +458,8 @@ class MainMenu:
         except Exception as e:
             print(f"Error loading settings: {e}")
 
-    def save_settings(self):
+    #save settings to the config
+    def saveSettings(self):
         # Save current settings to the configuration file
         settings = {
             'keys': [self.up,self.down,self.left,self.right,self.retry,self.exitK],
@@ -418,26 +469,30 @@ class MainMenu:
             'mode': self.mode
         }
 
-        with open('./snakeCache/settings.json', 'w') as settings_file:
+        with open('./snakeCache/config.json', 'w') as settings_file:
             json.dump(settings, settings_file)
 
-    def activate_window(self,hwnd):
+    #activate the main menu window
+    def activateWindow(self,hwnd):
         # Activate the window using SetForegroundWindow
         ctypes.windll.user32.SetForegroundWindow(hwnd)
 
+    #start the snake game
     def gameStart(self):
         self.window.destroy()
-        self.save_settings()  # Save settings before starting the game
+        self.saveSettings()  # Save settings before starting the game
         self.createGame()
         self.game.run()
 
-    def handle_key(self, event):
+    #player input decryption
+    def handleKey(self, event):
         if(event.keysym=="Escape"):
             self.close()
         elif(self.ctrl):
             self.g.set(1)
             self.key=event.keysym
 
+    #creates the main menu
     def createMainMenu(self):
         self._start = Button(self.window,text="Start",command=self.gameStart,width=7)
         self.option = Button(self.window,text="Options",command=self.optionMenu,width=7)
@@ -449,13 +504,16 @@ class MainMenu:
         self.parmTextStr="SELECTED:\n   Color: "+str(self.color)+"\n   Snake Size: "+str(self.cellSize)+"\n   Game Size: "+str(self.gameSize)
         self.parmText=Canvas.create_text(self.canvas,5,self.height,text=self.parmTextStr,fill=self.textColor,anchor="sw",tags="text")
         
+    #close the main menu
     def close(self):
-        self.save_settings()
+        self.saveSettings()
         exit()
 
+    #create the snake game
     def createGame(self):
         self.game=SnakeGame(self.gameSize,self.cellSize,self.color,self.mode,self.keys)
 
+    #sets the snake color
     def setColor(self,input):
         if(input==1):
             self.color="green"
@@ -475,12 +533,15 @@ class MainMenu:
             self.canvas.delete("all")
             self._color=self.canvas.create_text(self.width/2,self.height/2-50,text="Selected Color: "+self.color,anchor=CENTER,fill=self.textColor,tags="text")
 
+    #sets the window color
     def setBG(self,input):
         self.bgColor=input
     
+    #set the text color
     def setTxtColor(self,input):
         self.textColor=input
-        
+    
+    #sets the snake size
     def setCellSize(self,input):
         if(input==1):
             self.cellSize="small" 
@@ -492,6 +553,7 @@ class MainMenu:
             self.canvas.delete("all")
             self._color=self.canvas.create_text(self.width/2,self.height/2-50,text="Selected Size: "+self.cellSize,anchor=CENTER,fill=self.textColor,tags="text")
 
+    #sets the window size
     def setGameSize(self,input):
         if(input==1):
             self.gameSize="small" 
@@ -503,17 +565,20 @@ class MainMenu:
             self.canvas.delete("all")
             self._color=self.canvas.create_text(self.width/2,self.height/2-50,text="Selected Size: "+self.gameSize,anchor=CENTER,fill=self.textColor,tags="text")
 
+    #recreate the main menu
     def backMenu(self):
         self.canvas.delete("all")
         self.delWidgets()
         self.createMainMenu()
         
+    #delete all widgets exept for the canvas
     def delWidgets(self):
         self.widgets=self.window.winfo_children()
         for widget in self.widgets:
             if(not(str(widget)==".!canvas")):
                 widget.destroy()
 
+    #option menu gui
     def optionMenu(self):
         self.canvas.delete("all")
         self.delWidgets()
@@ -530,6 +595,7 @@ class MainMenu:
         self.controls.place(relx=0.5,rely=0.6,anchor=CENTER)
         self.back.place(relx=0.5,rely=0.7,anchor=CENTER)
 
+    #control key menu
     def controlsMenu(self):
         self.delWidgets()
         self.canvas.delete("all")
@@ -542,9 +608,10 @@ class MainMenu:
         self.rightLabel=self.canvas.create_text(self.width//2-2.5,self.height//2+30,text="Right:",font=("Helvetica",12),fill=self.textColor,tags=("text","ctrl"),anchor="e")
         self.retryLabel=self.canvas.create_text(self.width//2-2.5,self.height//2+112,text="Retry:",font=("Helvetica",12),fill=self.textColor,tags=("text","ctrl"),anchor="e")
         self.exitLabel=self.canvas.create_text(self.width//2-2.5,self.height//2+142,text="Exit:",font=("Helvetica",12),fill=self.textColor,tags=("text","ctrl"),anchor="e")
-        self.setKeys()  
-    #key set buttons
-    def setKeys(self):
+        self.setOptionKeys()  
+  
+    #control key menu buttons
+    def setOptionKeys(self):
         self.backK = Button(self.window,text="Back To Menu",command=self.backMenu,width=15)
         self.upButton=Button(self.window,text=self.up,command=lambda:self.changeKey(self.up),borderwidth=0,bg=self.bgColor,fg=self.textColor,font=("Helvetica",12,"underline"),height=1)
         self.downButton=Button(self.window,text=self.down,command=lambda:self.changeKey(self.down),borderwidth=0,bg=self.bgColor,fg=self.textColor,font=("Helvetica",12,"underline"),height=1)
@@ -560,6 +627,7 @@ class MainMenu:
         self.exitButton.place(relx=0.5,rely=0.75)
         self.backK.place(relx=0.5,rely=0.85,anchor=CENTER)
 
+    #changes key to a pressed one
     def changeKey(self,key):
         self.ctrl = True
         self.window.wait_variable(self.g)
@@ -576,8 +644,9 @@ class MainMenu:
         elif(key==self.exitK):
             self.exitK=str(self.key)
         self.delWidgets()
-        self.setKeys()
+        self.setOptionKeys()
         
+    #change light/dark mode
     def changeMode(self):
         if(self.mode=="dark"):
             self.mode="light"
@@ -589,6 +658,7 @@ class MainMenu:
             self.setBG("black")
         self.refreshCanvas()
 
+    #refresh the data in the window
     def refreshCanvas(self):
         if(self.mode=="light"):
             self.setTxtColor("black")
@@ -604,6 +674,7 @@ class MainMenu:
         except:
             pass
 
+    #snake size menu
     def optionCellSize(self):
         self.canvas.delete("all")
         self.delWidgets()
@@ -617,6 +688,7 @@ class MainMenu:
         self.large.place(relx=0.7,rely=0.5,anchor=CENTER)
         self.back.place(relx=0.5,rely=0.6,anchor=CENTER)
 
+    #game size menu
     def optionGameSize(self):
         self.canvas.delete("all")
         self.delWidgets()
@@ -630,6 +702,7 @@ class MainMenu:
         self.large.place(relx=0.7,rely=0.5,anchor=CENTER)
         self.back.place(relx=0.5,rely=0.6,anchor=CENTER)
 
+    #color menu
     def optionColor(self):
         self.canvas.delete("all")
         self.delWidgets()
@@ -651,6 +724,7 @@ class MainMenu:
         self.yellow.place(relx=0.82,rely=0.5,anchor=CENTER)
         self.back.place(relx=0.5,rely=0.6,anchor=CENTER)
 
+    #start the main menu
     def start(self):
         self.window.mainloop()
 #end of game code
