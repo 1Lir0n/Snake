@@ -173,7 +173,10 @@ class SnakeGame:
         x = random.randint(1, (self.width - self.size) // self.size) * self.size
         y = random.randint(11, (self.height - self.size) // self.size) * self.size
         #value=random.randint(1,3)
-        values=["red","darkOliveGreen","sandyBrown"]
+        if(not self.color=="mono"):
+            values=["red","darkOliveGreen","sandyBrown"]
+        else:
+            values=["#454545","#777777","#aaaaaa"]
         self.value=random.choices(values,[15,5,1])[0]
         food = self.canvas.create_rectangle(x, y, x + self.size, y + self.size, fill=self.value)
         return food
@@ -303,7 +306,9 @@ class SnakeGame:
         elif((color)=="rainbow"):
             self.rndColor = True
             self.setColor("green")
-
+        elif((color)=="mono"):
+            self.snake_colors = ["darkGray","dimGray"]
+    
     #set the snake size
     def setSize(self,cellSize):
         if(str(cellSize).lower()=="small"):
@@ -557,9 +562,12 @@ class MainMenu:
             self.rainbowCheck=True
             #self.changeColor()
             self.color="rainbow"
-        if(input>0 and input<8):
+        elif(input==8):
+            self.color="mono"
+        if(input>0 and input<9):
             self.canvas.delete("all")
             self._color=self.canvas.create_text(self.width/2,self.height/2-50,text="Selected Color: "+self.color,anchor=CENTER,fill=self.textColor,tags="text")
+   
     #sets the window color
     def setBG(self,input):
         self.bgColor=input
@@ -751,14 +759,16 @@ class MainMenu:
         self.orange=Button(self.window,text="Orange",command=lambda:self.setColor(5),width=5,bg="orange")
         self.yellow=Button(self.window,text="Yellow",command=lambda:self.setColor(6),width=5,bg="yellow")
         self.rainbowColorB=Button(self.window,text="Rainbow",command=lambda:self.setColor(7),width=8)
+        self.mono=Button(self.window,text="Monochrome",command=lambda:self.setColor(8),width=11)
         self.rainbowColorB.place(relx=0.5,y=self.height//2+160,anchor=CENTER)
+        self.mono.place(relx=0.5,y=self.height//2+190,anchor=CENTER)
         self.green.place(relx=0.5,y=self.height//2-20,anchor=CENTER)
         self.blue.place(relx=0.5,y=self.height//2+10,anchor=CENTER)
         self.purple.place(relx=0.5,y=self.height//2+40,anchor=CENTER)
         self.red.place(relx=0.5,y=self.height//2+70,anchor=CENTER)
         self.orange.place(relx=0.5,y=self.height//2+100,anchor=CENTER)
         self.yellow.place(relx=0.5,y=self.height//2+130,anchor=CENTER)
-        self.back.place(relx=0.5,y=self.height//2+200,anchor=CENTER)
+        self.back.place(relx=0.5,y=self.height//2-90,anchor=CENTER)
         self.changeColor()
 
     #start the main menu
