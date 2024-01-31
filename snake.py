@@ -19,7 +19,8 @@ class SnakeGame:
     colorNum=1
     textColor="white"
     bgColor="black"
-
+    speed=110
+    foodAte=0
     #movement keys
     up="Up"
     down="Down"
@@ -171,9 +172,12 @@ class SnakeGame:
     def spawnFood(self):
         x = random.randint(1, (self.width - self.size) // self.size) * self.size
         y = random.randint(11, (self.height - self.size) // self.size) * self.size
-        food = self.canvas.create_rectangle(x, y, x + self.size, y + self.size, fill="red")
+        #value=random.randint(1,3)
+        values=["red","darkOliveGreen","sandyBrown"]
+        self.value=random.choices(values,[15,5,1])[0]
+        food = self.canvas.create_rectangle(x, y, x + self.size, y + self.size, fill=self.value)
         return food
-
+        
     #moves the snake one square
     def moveSnake(self):
         head = self.snake[0]
@@ -183,10 +187,16 @@ class SnakeGame:
         self.snake.insert(0, new_head)
         #checks for food collision
         if new_head == tuple(self.canvas.coords(self.food)[:2]):
-            self.score+=10
+            if(self.value=="red"):
+                self.score+=1
+            elif(self.value=="darkOliveGreen"):
+                self.score+=5
+            elif(self.value=="sandyBrown"):
+                self.score+=10
             strScore="Score: "+str(self.score)
             self.canvas.itemconfig(self.textScore,text=strScore)
             self.canvas.delete(self.food)
+            self.foodAte+=1
             if(self.rndColor):
                 self.changeColor()
             self.food = self.spawnFood()
@@ -227,8 +237,13 @@ class SnakeGame:
             for i, (x, y) in enumerate(self.snake):
                 color = self.snake_colors[i % 2]
                 self.canvas.create_rectangle(x, y, x + self.size, y + self.size, fill=color, tags="snake")
+            if(self.foodAte>=10 and self.speed>60):
+                self.speed-=5
+                self.foodAte=0
+                if(self.speed<60):
+                    self.speed=60
             #loops
-            self.window.after(100, self.update)
+            self.window.after(self.speed, self.update)
         else:
            #died
            self.deathScreen()
