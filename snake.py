@@ -1,10 +1,12 @@
 import ctypes
+from itertools import cycle
 import json
 from tkinter import *
 import random
 import os
 from json import *
 
+#snake class
 class SnakeGame:
     #parameters
     size = 10
@@ -45,7 +47,7 @@ class SnakeGame:
         self.setSize(cellSize) 
         self.setCanvas(gameSize)
         self.canvas.pack()
-        
+        self.window.configure(bg=self.bgColor)
         #score text
         self.strScore="Score: "+str(self.score)
         self.textScore=self.canvas.create_text(5,5,text=self.strScore,fill=self.textColor, font=("Helvetica", 11),anchor="nw")
@@ -278,7 +280,7 @@ class SnakeGame:
         elif((color)=="yellow"):
             self.snake_colors = ["#fff82e", "#d6c313"]
         elif((color)=="orange"):
-            self.snake_colors = ["#c45d14", "#8f3e04"]
+            self.snake_colors = ["#f06a1d", "#a64207"]
         elif((color)=="purple"):
             self.snake_colors = ["#911ec7", "#5914a3"]
         elif((color)=="green"):
@@ -382,11 +384,15 @@ class SnakeGame:
     def setTxtColor(self,input):
         self.textColor=input
 
-#class 2
+#main menu gui class
 class MainMenu:
     textColor="white"
     bgColor="black"
     mode="dark"
+    rainbowCheck=False
+    rainbow_colors = ["light green", "#358be6", "#b035e6", "#eb4034", "orange", "yellow"]
+    color_cycle = cycle(rainbow_colors)
+    colorN=0
     #player controls
     ctrl=False
     key=""
@@ -414,6 +420,7 @@ class MainMenu:
         self.loadSettings()
 
         self.createMainMenu()
+        self.window.configure(bg=self.bgColor)
         self.g=IntVar(self.window)
         self.window.bind("<Key>", self.handleKey)
         self.window.update_idletasks()
@@ -454,7 +461,10 @@ class MainMenu:
 
             # Update the UI to reflect the loaded settings
             #self.changeMode()
-            self.refreshCanvas()
+            try:
+                self.refreshCanvas()
+            except:
+                pass
         except Exception as e:
             print(f"Error loading settings: {e}")
 
@@ -481,6 +491,7 @@ class MainMenu:
     def gameStart(self):
         self.window.destroy()
         self.saveSettings()  # Save settings before starting the game
+        self.loadSettings()
         self.createGame()
         self.game.run()
 
@@ -497,9 +508,9 @@ class MainMenu:
         self._start = Button(self.window,text="Start",command=self.gameStart,width=7)
         self.option = Button(self.window,text="Options",command=self.optionMenu,width=7)
         self.exitB = Button(self.window,text="Exit",command=self.close,width=7)
-        self._start.place(relx=0.5, rely=0.5, anchor=CENTER)
-        self.option.place(relx=0.5, rely=0.57, anchor=CENTER)
-        self.exitB.place(relx=0.5, rely=0.639, anchor=CENTER)
+        self._start.place(relx=0.5, y=self.height//2, anchor=CENTER)
+        self.option.place(relx=0.5, y=self.height//2+40, anchor=CENTER)
+        self.exitB.place(relx=0.5, y=self.height//2+80, anchor=CENTER)
 
         self.parmTextStr="SELECTED:\n   Color: "+str(self.color)+"\n   Snake Size: "+str(self.cellSize)+"\n   Game Size: "+str(self.gameSize)
         self.parmText=Canvas.create_text(self.canvas,5,self.height,text=self.parmTextStr,fill=self.textColor,anchor="sw",tags="text")
@@ -528,11 +539,12 @@ class MainMenu:
         elif(input==6):
             self.color="yellow"
         elif(input==7):
+            self.rainbowCheck=True
+            #self.changeColor()
             self.color="rainbow"
         if(input>0 and input<8):
             self.canvas.delete("all")
             self._color=self.canvas.create_text(self.width/2,self.height/2-50,text="Selected Color: "+self.color,anchor=CENTER,fill=self.textColor,tags="text")
-
     #sets the window color
     def setBG(self,input):
         self.bgColor=input
@@ -573,6 +585,7 @@ class MainMenu:
         
     #delete all widgets exept for the canvas
     def delWidgets(self):
+        self.rainbowCheck=False
         self.widgets=self.window.winfo_children()
         for widget in self.widgets:
             if(not(str(widget)==".!canvas")):
@@ -588,12 +601,12 @@ class MainMenu:
         self._optionGameSize = Button(self.window,text="Game Size",command=self.optionGameSize,width=10)
         self._optionColor = Button(self.window,text="Snake Color",command=self.optionColor,width=10)
         self._optionMode = Button(self.window,text=self.mode+" mode",command=self.changeMode,width=10)
-        self._optionMode.place(relx=0.5,rely=0.4,anchor=CENTER)
-        self._optionCellSize.place(relx=0.3,rely=0.5,anchor=CENTER)
-        self._optionColor.place(relx=0.5,rely=0.5,anchor=CENTER)
-        self._optionGameSize.place(relx=0.7,rely=0.5,anchor=CENTER)
-        self.controls.place(relx=0.5,rely=0.6,anchor=CENTER)
-        self.back.place(relx=0.5,rely=0.7,anchor=CENTER)
+        self._optionMode.place(relx=0.5,y=self.height//2-50,anchor=CENTER)
+        self._optionCellSize.place(relx=0.5,y=self.height//2-5,anchor=CENTER)
+        self._optionColor.place(relx=0.5,y=self.height//2+30,anchor=CENTER)
+        self._optionGameSize.place(relx=0.5,y=self.height//2+65,anchor=CENTER)
+        self.controls.place(relx=0.5,y=self.height//2+100,anchor=CENTER)
+        self.back.place(relx=0.5,y=self.height//2+150,anchor=CENTER)
 
     #control key menu
     def controlsMenu(self):
@@ -619,13 +632,13 @@ class MainMenu:
         self.rightButton=Button(self.window,text=self.right,command=lambda:self.changeKey(self.right),borderwidth=0,bg=self.bgColor,fg=self.textColor,font=("Helvetica",12,"underline"),height=1)
         self.retryButton=Button(self.window,text=self.retry,command=lambda:self.changeKey(self.retry),borderwidth=0,bg=self.bgColor,fg=self.textColor,font=("Helvetica",12,"underline"),height=1)
         self.exitButton=Button(self.window,text=self.exitK,command=lambda:self.changeKey(self.exitK),borderwidth=0,bg=self.bgColor,fg=self.textColor,font=("Helvetica",12,"underline"),height=1)
-        self.upButton.place(relx=0.5,rely=0.35)
-        self.downButton.place(relx=0.5,rely=0.41)
-        self.leftButton.place(relx=0.5,rely=0.47)
-        self.rightButton.place(relx=0.5,rely=0.53)
-        self.retryButton.place(relx=0.5,rely=0.69)
-        self.exitButton.place(relx=0.5,rely=0.75)
-        self.backK.place(relx=0.5,rely=0.85,anchor=CENTER)
+        self.upButton.place(relx=0.5,y=self.height//2-75)
+        self.downButton.place(relx=0.5,y=self.height//2-45)
+        self.leftButton.place(relx=0.5,y=self.height//2-15)
+        self.rightButton.place(relx=0.5,y=self.height//2+15)
+        self.retryButton.place(relx=0.5,y=self.height//2+98)
+        self.exitButton.place(relx=0.5,y=self.height//2+128)
+        self.backK.place(relx=0.5,y=self.height//2+200,anchor=CENTER)
 
     #changes key to a pressed one
     def changeKey(self,key):
@@ -683,10 +696,10 @@ class MainMenu:
         self.small = Button(self.window,text="Small",command=lambda:self.setCellSize(1),width=10)
         self.medium = Button(self.window,text="Medium",command=lambda:self.setCellSize(2),width=10)
         self.large = Button(self.window,text="Large",command=lambda:self.setCellSize(3),width=10)
-        self.small.place(relx=0.3,rely=0.5,anchor=CENTER)
-        self.medium.place(relx=0.5,rely=0.5,anchor=CENTER)
-        self.large.place(relx=0.7,rely=0.5,anchor=CENTER)
-        self.back.place(relx=0.5,rely=0.6,anchor=CENTER)
+        self.small.place(relx=0.5,y=self.height//2-20,anchor=CENTER)
+        self.medium.place(relx=0.5,y=self.height//2+10,anchor=CENTER)
+        self.large.place(relx=0.5,y=self.height//2+40,anchor=CENTER)
+        self.back.place(relx=0.5,y=self.height//2+100,anchor=CENTER)
 
     #game size menu
     def optionGameSize(self):
@@ -697,38 +710,47 @@ class MainMenu:
         self.small = Button(self.window,text="Small",command=lambda:self.setGameSize(1),width=10)
         self.medium = Button(self.window,text="Medium",command=lambda:self.setGameSize(2),width=10)
         self.large = Button(self.window,text="Large",command=lambda:self.setGameSize(3),width=10)
-        self.small.place(relx=0.3,rely=0.5,anchor=CENTER)
-        self.medium.place(relx=0.5,rely=0.5,anchor=CENTER)
-        self.large.place(relx=0.7,rely=0.5,anchor=CENTER)
-        self.back.place(relx=0.5,rely=0.6,anchor=CENTER)
+        self.small.place(relx=0.5,y=self.height//2-20,anchor=CENTER)
+        self.medium.place(relx=0.5,y=self.height//2+10,anchor=CENTER)
+        self.large.place(relx=0.5,y=self.height//2+40,anchor=CENTER)
+        self.back.place(relx=0.5,y=self.height//2+100,anchor=CENTER)
+
+    #cahnge the rainbow button color
+    def changeColor(self):
+        if(self.rainbowCheck):
+            next_color = next(self.color_cycle)
+            self.rainbowColorB.config(bg=next_color)
+            self.window.after(150, self.changeColor)  # Schedule the next color change after 250ms
 
     #color menu
     def optionColor(self):
         self.canvas.delete("all")
         self.delWidgets()
+        self.rainbowCheck=True
         self._color=self.canvas.create_text(self.width/2,self.height/2-50,text="Selected Color: "+self.color,anchor=CENTER,fill=self.textColor,tags="text")
         self.back = Button(self.window,text="Back To Menu",command=self.backMenu,width=15)
-        self.green=Button(self.window,text="Green",command=lambda:self.setColor(1),width=5)
-        self.blue=Button(self.window,text="Blue",command=lambda:self.setColor(2),width=5)
-        self.purple=Button(self.window,text="Purple",command=lambda:self.setColor(3),width=5)
-        self.red=Button(self.window,text="Red",command=lambda:self.setColor(4),width=5)
-        self.orange=Button(self.window,text="Orange",command=lambda:self.setColor(5),width=5)
-        self.yellow=Button(self.window,text="Yellow",command=lambda:self.setColor(6),width=5)
+        self.green=Button(self.window,text="Green",command=lambda:self.setColor(1),width=5,bg="light green")
+        self.blue=Button(self.window,text="Blue",command=lambda:self.setColor(2),width=5,bg="#358be6")
+        self.purple=Button(self.window,text="Purple",command=lambda:self.setColor(3),width=5,bg="#b035e6")
+        self.red=Button(self.window,text="Red",command=lambda:self.setColor(4),width=5,bg="#eb4034")
+        self.orange=Button(self.window,text="Orange",command=lambda:self.setColor(5),width=5,bg="orange")
+        self.yellow=Button(self.window,text="Yellow",command=lambda:self.setColor(6),width=5,bg="yellow")
         self.rainbowColorB=Button(self.window,text="Rainbow",command=lambda:self.setColor(7),width=8)
-        self.rainbowColorB.place(relx=0.5,rely=0.44,anchor=CENTER)
-        self.green.place(relx=0.195,rely=0.5,anchor=CENTER)
-        self.blue.place(relx=0.32,rely=0.5,anchor=CENTER)
-        self.purple.place(relx=0.445,rely=0.5,anchor=CENTER)
-        self.red.place(relx=0.57,rely=0.5,anchor=CENTER)
-        self.orange.place(relx=0.695,rely=0.5,anchor=CENTER)
-        self.yellow.place(relx=0.82,rely=0.5,anchor=CENTER)
-        self.back.place(relx=0.5,rely=0.6,anchor=CENTER)
+        self.rainbowColorB.place(relx=0.5,y=self.height//2+160,anchor=CENTER)
+        self.green.place(relx=0.5,y=self.height//2-20,anchor=CENTER)
+        self.blue.place(relx=0.5,y=self.height//2+10,anchor=CENTER)
+        self.purple.place(relx=0.5,y=self.height//2+40,anchor=CENTER)
+        self.red.place(relx=0.5,y=self.height//2+70,anchor=CENTER)
+        self.orange.place(relx=0.5,y=self.height//2+100,anchor=CENTER)
+        self.yellow.place(relx=0.5,y=self.height//2+130,anchor=CENTER)
+        self.back.place(relx=0.5,y=self.height//2+200,anchor=CENTER)
+        self.changeColor()
 
     #start the main menu
     def start(self):
         self.window.mainloop()
-#end of game code
 
+#end of game code
 
 #start of run
 game=MainMenu()
