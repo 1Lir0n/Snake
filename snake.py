@@ -5,6 +5,8 @@ from tkinter import *
 import random
 import os
 from json import *
+from winsound import PlaySound
+import winsound
 
 #snake class
 class SnakeGame:
@@ -41,7 +43,6 @@ class SnakeGame:
         #create the window
         self.window = Tk()
         self.window.title("Snake Game")
-
         #canvas creation
         self.mode=mode
         self.changeMode()
@@ -52,7 +53,9 @@ class SnakeGame:
         #score text
         self.strScore="Score: "+str(self.score)
         self.textScore=self.canvas.create_text(5,5,text=self.strScore,fill=self.textColor, font=("Helvetica", 11),anchor="nw")
-    
+
+        PlaySound("./snakeCache/background.wav",winsound.SND_NODEFAULT|winsound.SND_ASYNC|winsound.SND_LOOP)
+
     #snake creation
         #snake color
         self.color=color
@@ -83,7 +86,7 @@ class SnakeGame:
 
         #player input
         self.window.bind("<Key>", self.handleKey)
-        
+
         #loop
         self.update()
         self.window.update_idletasks()
@@ -172,7 +175,6 @@ class SnakeGame:
     def spawnFood(self):
         x = random.randint(1, (self.width - self.size) // self.size) * self.size
         y = random.randint(11, (self.height - self.size) // self.size) * self.size
-        #value=random.randint(1,3)
         if(not self.color=="mono"):
             values=["red","darkOliveGreen","sandyBrown"]
         else:
@@ -234,6 +236,7 @@ class SnakeGame:
         #if snake good pos move snake
         if not self.checkCollision():
             self.moveSnake()
+            self.window.update_idletasks()
             self.canvas.delete("snake")
 
             # Alternate between two color variant for the snake
