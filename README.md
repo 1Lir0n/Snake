@@ -29,5 +29,5 @@ option gui has:
 Music
 ---
 <pre>
- Music by <a href="https://uppbeat.io/t/ra/cold-brew">Cold Brew</a> from <a href="https://uupbeat.io">Uupbeat</a>
+ Background Music by <a href="https://uppbeat.io/t/ra/cold-brew">Cold Brew</a> from <a href="https://uupbeat.io">Uupbeat</a>
 </pre>
