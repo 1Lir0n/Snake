@@ -6,6 +6,7 @@ from tkinter import *
 import random
 import os
 from json import *
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import pygame 
 
 #snake class
@@ -59,6 +60,7 @@ class SnakeGame:
         self.deathSound = pygame.mixer.Sound("./snakeCache/death.wav")
         self.eatSound = pygame.mixer.Sound("./snakeCache/eat.wav")
         self.timerSound = pygame.mixer.Sound("./snakeCache/timer.wav")
+        self.newHS = pygame.mixer.Sound("./snakeCache/highScore.wav")
         #volume sets
         self.bgSound.set_volume(0.2)
         self.eatSound.set_volume(0.7)
@@ -160,6 +162,7 @@ class SnakeGame:
 
         if self.die==False:
             return
+        self.start=False
         self.die=False
         self.retryB.destroy()
         self.exitB.destroy()
@@ -291,6 +294,7 @@ class SnakeGame:
                 self.width // 2, self.height // 2+10, text="HighScore: "+str(self.highScore), fill=self.textColor, font=("Helvetica", 16),tags="text"
             )
         else:
+            self.newHS.play()
             self.setHighScore()
             self.canvas.create_text(
                 self.width // 2, self.height // 2, text="New HighScore!!", fill=self.textColor, font=("Helvetica", 16),tags="text"
