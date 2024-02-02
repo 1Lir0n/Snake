@@ -1,12 +1,12 @@
 import ctypes
 from itertools import cycle
 import json
+import time
 from tkinter import *
 import random
 import os
 from json import *
-from winsound import PlaySound
-import winsound
+import pygame 
 
 #snake class
 class SnakeGame:
@@ -53,8 +53,15 @@ class SnakeGame:
         #score text
         self.strScore="Score: "+str(self.score)
         self.textScore=self.canvas.create_text(5,5,text=self.strScore,fill=self.textColor, font=("Helvetica", 11),anchor="nw")
-
-        PlaySound("./snakeCache/background.wav",winsound.SND_NODEFAULT|winsound.SND_ASYNC|winsound.SND_LOOP)
+        #sound creation
+        pygame.mixer.init()
+        self.bgSound = pygame.mixer.Sound("./snakeCache/background.wav")
+        self.deathSound = pygame.mixer.Sound("./snakeCache/death.wav")
+        self.eatSound = pygame.mixer.Sound("./snakeCache/eat.wav")
+        self.timerSound = pygame.mixer.Sound("./snakeCache/timer.wav")
+        #volume sets
+        self.bgSound.set_volume(0.2)
+        self.eatSound.set_volume(0.7)
 
     #snake creation
         #snake color
@@ -72,7 +79,7 @@ class SnakeGame:
         #snake direction
         self.setDirection(self.base)
 
-        #checks
+        #checks    
         self.finish=IntVar(self.window)
         self.die=False
 
@@ -97,6 +104,7 @@ class SnakeGame:
             self.activateWindow(hwnd)
         else:
             print("Window not found.")
+        self.bgSound.play()
     
     #set keys from saved config
     def setKeys(self,keys):
@@ -192,6 +200,7 @@ class SnakeGame:
         self.snake.insert(0, new_head)
         #checks for food collision
         if new_head == tuple(self.canvas.coords(self.food)[:2]):
+            self.eatSound.play()
             if(self.value=="red"):
                 self.score+=1
             elif(self.value=="darkOliveGreen"):
@@ -231,31 +240,43 @@ class SnakeGame:
                 self.snake.insert(0, new_head)
         #checks if the game run first time or reseted
         if(not self.start):
+            self.timerSound.play()
             self.countDown()
             self.window.wait_variable(self.finish)
         #if snake good pos move snake
         if not self.checkCollision():
             self.moveSnake()
             self.window.update_idletasks()
-            self.canvas.delete("snake")
-
-            # Alternate between two color variant for the snake
-            for i, (x, y) in enumerate(self.snake):
-                color = self.snake_colors[i % 2]
-                self.canvas.create_rectangle(x, y, x + self.size, y + self.size, fill=color, tags="snake")
-            if(self.foodAte>=10 and self.speed>60):
-                self.speed-=5
-                self.foodAte=0
-                if(self.speed<60):
-                    self.speed=60
+            self.createSnake()
             #loops
             self.window.after(self.speed, self.update)
         else:
            #died
            self.deathScreen()
 
+    def createSnake(self):
+        self.canvas.delete("snake")
+        for i, (x, y) in enumerate(self.snake):
+            color = self.snake_colors[i % 2]
+            self.canvas.create_rectangle(x, y, x + self.size, y + self.size, fill=color, tags="snake")
+        if(self.foodAte>=10 and self.speed>60):
+            self.speed-=5
+            self.foodAte=0
+            if(self.speed<60):
+                self.speed=60
+
+    def deathAnim(self):
+        self.deathSound.play()
+        start=len(self.snake)
+        for i in range(start-1):
+            self.createSnake()
+            self.window.update_idletasks()
+            self.snake.pop()
+            time.sleep(0.1)
+            
     #end game screen
     def deathScreen(self):
+        self.deathAnim()
         self.die = True
         self.setHighScore()
         self.retryB = Button(self.window,text="Retry",command=self.resetGame,font=(16))
@@ -264,11 +285,21 @@ class SnakeGame:
         self.exitB.place(relx=0.65,rely=0.6,anchor=CENTER,width=55)
         self.menuB = Button(self.window,text="Menu",command=self.menu,font=(16))
         self.menuB.place(relx=0.5,rely=0.6,anchor=CENTER,width=55)
+        if(self.score<self.highScore):
+            self.setHighScore()
+            self.canvas.create_text(
+                self.width // 2, self.height // 2+10, text="HighScore: "+str(self.highScore), fill=self.textColor, font=("Helvetica", 16),tags="text"
+            )
+        else:
+            self.setHighScore()
+            self.canvas.create_text(
+                self.width // 2, self.height // 2, text="New HighScore!!", fill=self.textColor, font=("Helvetica", 16),tags="text"
+            )
+            self.canvas.create_text(
+                self.width // 2, self.height // 2+20, text="HighScore: "+str(self.highScore), fill=self.textColor, font=("Helvetica", 16),tags="text"
+            )
         self.canvas.create_text(
-            self.width // 2, self.height // 2+20, text="HighScore: "+str(self.highScore), fill=self.textColor, font=("Helvetica", 16),tags="text"
-        )
-        self.canvas.create_text(
-            self.width // 2, self.height // 2, text="Game Over", fill=self.textColor, font=("Helvetica", 16),tags="text"
+            self.width // 2, self.height // 2-20, text="Game Over", fill=self.textColor, font=("Helvetica", 16),tags="text"
         )
     
     #creates the main menu and delete the game
@@ -398,7 +429,6 @@ class SnakeGame:
             self._text=self.canvas.create_text(250,250, text="Go!",fill=self.textColor, font=("Helvetica", 30),anchor=CENTER,tags=("timer","text"))
             self.window.after(500, lambda: self.canvas.delete("timer"))
             self.finish.set(1)
-
     #sets the windows background
     def setBG(self,input):
         self.bgColor=input
