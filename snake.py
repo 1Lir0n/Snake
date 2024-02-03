@@ -97,7 +97,6 @@ class SnakeGame:
         self.window.bind("<Key>", self.handleKey)
 
         #loop
-        self.update()
         self.window.update_idletasks()
 
         #active game window
@@ -107,7 +106,9 @@ class SnakeGame:
         else:
             print("Window not found.")
         self.bgSound.play()
-    
+        
+        self.update()
+
     #set keys from saved config
     def setKeys(self,keys):
             self.up=keys[0]
@@ -190,7 +191,7 @@ class SnakeGame:
             values=["red","darkOliveGreen","sandyBrown"]
         else:
             values=["#454545","#777777","#aaaaaa"]
-        self.value=random.choices(values,[15,5,1])[0]
+        self.value=random.choices(values,[1,0.25,0.01])[0]
         food = self.canvas.create_rectangle(x, y, x + self.size, y + self.size, fill=self.value)
         return food
         
